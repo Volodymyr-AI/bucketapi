@@ -8,19 +8,19 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy .sln and all projects
-COPY OrderService.sln ./
+COPY orderbackend.sln ./
 COPY Domain/Order.Application/ Domain/Order.Application/
 COPY Domain/Order.Core/ Domain/Order.Core/
-COPY Infrastructure/Order.Database/ Infrastructure/Order.Database/
-COPY Presentation/app.WebApi/ Presentation/app.WebApi/
+COPY Infrastructure/Order.Infrastructure/ Infrastructure/Order.Infrastructure/
+COPY Presentation/Order.WebApi/ Presentation/Order.WebApi/
 
 # Set all dependencies and compile
-RUN dotnet restore OrderService.sln
-RUN dotnet publish Presentation/app.WebApi/app.WebApi.csproj -c Release -o /app/publish
+RUN dotnet restore orderbackend.sln
+RUN dotnet publish Presentation/Order.WebApi/Order.WebApi.csproj -c Release -o /app/publish
 
 # --- Final stage ---
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "app.WebApi.dll"]
+ENTRYPOINT ["dotnet", "Order.WebApi.dll"]
