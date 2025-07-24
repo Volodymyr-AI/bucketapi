@@ -1,0 +1,22 @@
+@OrderService_HostAddress = http://localhost:5103
+
+POST {{OrderService_HostAddress}}/api/v1.0/order
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customerId": "a3c8e731-82b5-4b1c-85a3-9d6b0540b2cf",
+  "products": [
+    {
+      "productId": "b65c1132-e3dd-4e8a-950c-124f0246c1cf",
+      "quantity": 2
+    },
+    {
+      "productId": "1a9460ff-8e43-4b4e-a0cd-23e2ccf8971a",
+      "quantity": 1
+    }
+  ],
+  "totalPrice": 1499.99
+}
+
+###
