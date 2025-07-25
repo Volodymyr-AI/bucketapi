@@ -40,7 +40,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Gui
         // Save into db
         await _orderDbContext.CustomerOrders.AddAsync(order, cancellationToken);
         await _orderDbContext.SaveChangesAsync(cancellationToken);
-
+        Console.WriteLine("_orderDbContext.GetType(): " + _orderDbContext.GetType());
         // Publish event
         await PublishDomainEventAsync(order);
         

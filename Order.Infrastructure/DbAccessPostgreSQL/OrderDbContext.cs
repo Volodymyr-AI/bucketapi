@@ -18,4 +18,18 @@ public class OrderDbContext : DbContext, IOrderDbContext
         modelBuilder.Ignore<DomainEvent>();
         modelBuilder.Ignore<Entity>();
     }
+    
+    public override int SaveChanges()
+    {
+        Console.WriteLine("SaveChanges was called!");
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var connStr = this.Database.GetDbConnection().ConnectionString;
+        Console.WriteLine("SaveChangesAsync called. ConnectionString = " + connStr);
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }

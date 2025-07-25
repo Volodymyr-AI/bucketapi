@@ -16,8 +16,9 @@ namespace Order.WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-            //Kafka
+            // Add services to the container
+            
+            //Kafka Section
             var kafkaBootstrapServers = builder.Configuration["Kafka:BootstrapServers"];
             if (string.IsNullOrWhiteSpace(kafkaBootstrapServers))
                 throw new InvalidOperationException("Kafka:BootstrapServers is not configured.");
@@ -43,17 +44,31 @@ namespace Order.WebApi
                     })
                     .Build();
             });
-            
             builder.Services.AddScoped<IEventPublisher, KafkaEventProducer>();
             
-            builder.Services.AddDbContext<OrderDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            // Database Connection Section
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                Console.WriteLine("Connection string is NULL or EMPTY.");
+            }
+            else
+            {
+                Console.WriteLine($"Connection string: {connectionString}");
+            }
+            builder.Services.AddDbContext<OrderDbContext>(options => options.UseNpgsql(connectionString));
             builder.Services.AddScoped<IOrderDbContext>(provider => provider.GetRequiredService<OrderDbContext>());
+            
+            // Application layer DI Section
             builder.Services.AddApplication();
 
+            // Use Controllers Section
             builder.Services.AddControllers();
             
+            // Use user secrets Section
             builder.Configuration.AddUserSecrets<AssemblyName>();
             
+            // Set up api versioning
             builder.Services.AddApiVersioning(options =>
             {
                 options.AssumeDefaultVersionWhenUnspecified = true;
@@ -61,12 +76,14 @@ namespace Order.WebApi
                 options.ReportApiVersions = true;
             });
             
+            // Swagger Section
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
             //builder.Services.AddOpenApi();
             builder.Services.AddSwaggerGen();
 
+            // Main pipeline
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
