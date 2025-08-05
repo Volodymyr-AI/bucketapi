@@ -1,4 +1,4 @@
-namespace Order.Core.Entities.Models;
+namespace Order.Core.Entities.Models.Middleware;
 
 public class ErrorResponse
 {

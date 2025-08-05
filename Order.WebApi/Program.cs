@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Order.Application;
 using Order.Application.Database;
 using Order.Application.Messaging;
+using Order.Core.Entities.Models.Middleware.RateLimit;
 using Order.Infrastructure.DbAccessPostgreSQL;
 using Order.Infrastructure.Messaging;
 using Order.WebApi.CustomMiddlewares.GlobalExceptionHandler;
+using Order.WebApi.CustomMiddlewares.RateLimiter;
 
 namespace Order.WebApi
 {
@@ -18,6 +20,60 @@ namespace Order.WebApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container
+            //Rate limiting
+            builder.Services.AddRateLimiting(options =>
+            {
+                // Generale end-point rules
+                options.GeneralRules = new List<RateLimitRule>
+                {
+                    new RateLimitRule
+                    {
+                        Name = "PerMinute",
+                        Limit = 100,
+                        Window = TimeSpan.FromMinutes(1)
+                    },
+                    new RateLimitRule
+                    {
+                        Name = "PerHour",
+                        Limit = 1000,
+                        Window = TimeSpan.FromHours(1)
+                    }
+                };
+                // Specific end-point rules
+                options.EndpointRules = new Dictionary<string, List<RateLimitRule>>
+                {
+                    ["GET:/api/order"] = new List<RateLimitRule>
+                    {
+                        new RateLimitRule { Name = "ProductsPerMinute", Limit = 200, Window = TimeSpan.FromMinutes(1) }
+                    }
+                };
+                
+                // Pattern-based rules (used with regex)
+                options.PatternRules = new Dictionary<string, List<RateLimitRule>>
+                {
+                    // All API endpoints beginning with /api/admin (адмін панель)
+                    [@"^POST:/api/admin/.*"] = new List<RateLimitRule>
+                    {
+                        new RateLimitRule { Name = "AdminPerMinute", Limit = 30, Window = TimeSpan.FromMinutes(1) }
+                    },
+
+                    // Всі upload endpoint-и (файли)
+                    [@"^POST:.*/upload$"] = new List<RateLimitRule>
+                    {
+                        new RateLimitRule { Name = "UploadPerMinute", Limit = 10, Window = TimeSpan.FromMinutes(1) },
+                        new RateLimitRule { Name = "UploadPerHour", Limit = 50, Window = TimeSpan.FromHours(1) }
+                    }
+                };
+
+                // Whitelist IP addresses (not for rate limiting)
+                options.WhitelistedIPs = new HashSet<string>
+                {
+                    "127.0.0.1",           // localhost
+                    "::1",                 // localhost IPv6
+                    "10.0.0.0/8",          // inner IP 
+                    "192.168.1.100"        // concrete IP
+                };
+            });
             
             //Kafka Section
             var kafkaBootstrapServers = builder.Configuration["Kafka:BootstrapServers"];
@@ -101,6 +157,7 @@ namespace Order.WebApi
             }
 
             app.UseHttpsRedirection();
+            app.UseRateLimiting();
             app.UseCors("ProductionCors");
 
             app.Use(async (context, next) =>
