@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="Orders\Queries\" />
+    <Folder Include="Utils\" />
   </ItemGroup>
 
   <ItemGroup>

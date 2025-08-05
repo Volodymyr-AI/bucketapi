@@ -7,6 +7,7 @@ using Order.Application.Database;
 using Order.Application.Messaging;
 using Order.Infrastructure.DbAccessPostgreSQL;
 using Order.Infrastructure.Messaging;
+using Order.WebApi.CustomMiddlewares.GlobalExceptionHandler;
 
 namespace Order.WebApi
 {
@@ -89,17 +90,36 @@ namespace Order.WebApi
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                app.UseGlobalExceptionHandling();
+                app.UseHsts();
+            }
 
             app.UseHttpsRedirection();
+            app.UseCors("ProductionCors");
+
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add("X-Frame-Options", "DENY");
+                context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+                context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+                context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+
+                await next();
+            });
+            
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
             
             app.MapControllers();
+            app.MapHealthChecks("/health");
             
             var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStopping.Register(() =>

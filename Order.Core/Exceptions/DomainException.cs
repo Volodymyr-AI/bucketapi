@@ -2,10 +2,10 @@ namespace Order.Core.Exceptions;
 
 public class DomainException : Exception
 {
-    public string Code { get; }
+    public string ErrorCode { get; }
 
-    public DomainException(string code, string message) : base(message)
+    public DomainException(string errorCode, string message) : base(message)
     {
-        Code = code;
+        ErrorCode = errorCode;
     }
 }

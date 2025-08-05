@@ -9,13 +9,14 @@ WORKDIR /src
 
 # Copy sln and projects
 COPY orderbackend.sln ./
-COPY Domain/ ./Domain/
-COPY Infrastructure/ ./Infrastructure/
-COPY Presentation/ ./Presentation/
+COPY Order.Core/ ./Order.Core/
+COPY Order.Application/ ./Order.Application/
+COPY Order.Infrastructure/ ./Order.Infrastructure/
+COPY Order.WebApi/ ./Order.WebApi/
 
 # Restore and publish
 RUN dotnet restore orderbackend.sln
-RUN dotnet publish Presentation/Order.WebApi/Order.WebApi.csproj -c Release -o /app/publish
+RUN dotnet publish Order.WebApi/Order.WebApi.csproj -c Release -o /app/publish
 
 # --- Final stage ---
 FROM base AS final
